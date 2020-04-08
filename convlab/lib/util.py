@@ -23,7 +23,7 @@ import torch.multiprocessing as mp
 import ujson
 import yaml
 
-from convlab import ROOT_DIR, EVAL_MODES
+from convlab import ROOT_DIR, EVAL_MODES, INTERACT_MODES
 
 NUM_CPUS = mp.cpu_count()
 FILE_TS_FORMAT = '%Y_%m_%d_%H%M%S'
@@ -257,6 +257,10 @@ def insert_folder(prepath, folder):
 def in_eval_lab_modes():
     '''Check if lab_mode is one of EVAL_MODES'''
     return get_lab_mode() in EVAL_MODES
+
+
+def in_inter_lab_modes():
+    return get_lab_mode() in INTERACT_MODES
 
 
 def is_jupyter():

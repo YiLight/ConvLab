@@ -17,7 +17,7 @@ import torch.multiprocessing as mp
 # import os
 # # NOTE increase if needed. Pytorch thread overusage https://github.com/pytorch/pytorch/issues/975
 # os.environ['OMP_NUM_THREADS'] = '1'
-from convlab import EVAL_MODES, TRAIN_MODES
+from convlab import EVAL_MODES, TRAIN_MODES, INTERACT_MODES
 from convlab.experiment.control import Session, Trial, Experiment
 from convlab.lib import logger, util
 from convlab.spec import spec_util
@@ -44,6 +44,10 @@ def run_spec(spec, lab_mode):
             spec_util.tick(spec, 'trial')
             Trial(spec).run()
     elif lab_mode in EVAL_MODES:
+        spec_util.tick(spec, 'session')
+        spec = spec_util.override_eval_spec(spec)
+        Session(spec).run()
+    elif lab_mode in INTERACT_MODES:
         spec_util.tick(spec, 'session')
         spec = spec_util.override_eval_spec(spec)
         Session(spec).run()

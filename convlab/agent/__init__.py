@@ -205,6 +205,10 @@ class DialogAgent(Agent):
             self.body.state, self.body.encoded_state = next_state, encoded_state
             return
 
+        if util.in_inter_lab_modes() or self.algorithm.__class__.__name__ == 'ExternalPolicy':  # inter does not update agent for training
+            self.body.state, self.body.encoded_state = next_state, encoded_state
+            return
+
         if not hasattr(self.body, 'warmup_memory') or self.body.env.clock.epi > self.warmup_epi:
             self.body.memory.update(self.body.encoded_state, self.body.action, reward, encoded_state, done)
         else:

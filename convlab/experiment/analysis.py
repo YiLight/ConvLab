@@ -40,12 +40,42 @@ def gen_return(agent, env):
     return total_reward
 
 
+def my_gen_return(agent, env):
+    env.reset()
+    obs = input(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Please input: ")
+    agent.reset(obs)
+    done = False
+    total_reward = 0
+    env.clock.tick('epi')
+    env.clock.tick('t')
+    while not done:
+        action = agent.act(obs)
+        next_obs, reward, done, info = env.step(action)
+        next_obs = input(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Please input: ")
+        # reward = float(input(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Please input reward: "))
+        if next_obs == "exit":
+            done = True
+        else:
+            done = False
+        agent.update(obs, action, reward, next_obs, done)
+        obs = next_obs
+        total_reward += reward
+        env.clock.tick('t')
+    return total_reward
+
+
 def gen_avg_return(agent, env, num_eval=NUM_EVAL):
     '''Generate average return for agent and an env'''
-    with util.ctx_lab_mode('eval'):  # enter eval context
-        agent.algorithm.update()  # set explore_var etc. to end_val under ctx
-        with torch.no_grad():
-            returns = [gen_return(agent, env) for i in range(num_eval)]
+    if util.in_eval_lab_modes():
+        with util.ctx_lab_mode('eval'):  # enter eval context
+            agent.algorithm.update()  # set explore_var etc. to end_val under ctx
+            with torch.no_grad():
+                returns = [gen_return(agent, env) for i in range(num_eval)]
+    if util.in_inter_lab_modes():
+        with util.ctx_lab_mode('inter'):
+            agent.algorithm.update()
+            with torch.no_grad():
+                returns = [my_gen_return(agent, env) for i in range(num_eval)]
     # exit eval context, restore variables simply by updating
     agent.algorithm.update()
     return np.mean(returns)
@@ -53,10 +83,16 @@ def gen_avg_return(agent, env, num_eval=NUM_EVAL):
 
 def gen_result(agent, env):
     '''Generate average return for agent and an env'''
-    with util.ctx_lab_mode('eval'):  # enter eval context
-        agent.algorithm.update()  # set explore_var etc. to end_val under ctx
-        with torch.no_grad():
-            _return = gen_return(agent, env)
+    if util.in_eval_lab_modes():
+        with util.ctx_lab_mode('eval'):  # enter eval context
+            agent.algorithm.update()  # set explore_var etc. to end_val under ctx
+            with torch.no_grad():
+                _return = gen_return(agent, env)
+    if util.in_inter_lab_modes():
+        with util.ctx_lab_mode('inter'):
+            agent.algorithm.update()
+            with torch.no_grad():
+                _return = my_gen_return(agent, env)
     # exit eval context, restore variables simply by updating
     agent.algorithm.update()
     return _return 

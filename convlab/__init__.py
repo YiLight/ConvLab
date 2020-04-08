@@ -8,3 +8,4 @@ ROOT_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 
 EVAL_MODES = ('eval')
 TRAIN_MODES = ('train', 'dev')
+INTERACT_MODES = ('inter')

@@ -141,6 +141,9 @@ class Session:
         if util.in_eval_lab_modes():
             self.run_eval()
             metrics = None
+        elif util.in_inter_lab_modes():
+            self.run_eval()
+            metrics = None
         else:
             self.run_rl()
             metrics = analysis.analyze_session(self.spec, self.agent.body.eval_df, 'eval')
