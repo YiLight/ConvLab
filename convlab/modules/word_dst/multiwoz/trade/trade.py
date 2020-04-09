@@ -1,5 +1,6 @@
 # Modified by Microsoft Corporation.
 # Licensed under the MIT license.
+from tqdm import tqdm
 
 from convlab.modules.word_dst.multiwoz.trade.trade_utils import *
 from convlab.modules.util.multiwoz.multiwoz_slot_trans import REF_SYS_DA, REF_USR_DA
@@ -219,44 +220,84 @@ class TRADETracker(Tracker):
         return predict_belief_bsz_ptr
 
     def train(self):
-        '''Training funciton of TRADE (to be added)'''
-        # Configure models and load data
-        # avg_best, cnt, acc = 0.0, 0, 0.0
-        train, dev, test, test_special, lang, SLOTS_LIST, gating_dict, max_word = prepare_data_seq(self.data_dir,
-                                                                                                   True, args['task'],
+        train, dev, test, test_special, lang, slots_list, gating_dict, max_word = prepare_data_seq(self.data_dir,
+                                                                                                   True,
+                                                                                                   args['task'],
                                                                                                    False,
                                                                                                    batch_size=int(
                                                                                                        args['batch']))
 
-        model = globals()[args['decoder']](
+        model = TRADE(
             hidden_size=int(args['hidden']),
             lang=lang,
             path=args['path'],
             task=args['task'],
             lr=float(args['learn']),
             dropout=float(args['drop']),
+            slots=slots_list,
+            gating_dict=gating_dict,
+            nb_train_vocab=max_word)
+
+        avg_best, cnt, acc = 0.0, 0, 0.0
+        early_stop = None
+
+        for epoch in range(200):
+            print("Epoch:{}".format(epoch))
+            pbar = tqdm(enumerate(train), total=len(train))
+            for i, training_data in pbar:
+                model.train_batch(training_data, int(args['clip']), slots_list[1], reset=(i == 0))
+                model.optimize(args['clip'])
+
+            if (epoch + 1) % int(args['evalp']) == 0:
+
+                acc = model.evaluate(dev, avg_best, slots_list[2], early_stop)
+                model.scheduler.step(acc)
+
+                if acc >= avg_best:
+                    avg_best = acc
+                    cnt = 0
+                    best_model = model
+                else:
+                    cnt += 1
+
+                if cnt == args["patience"] or (acc == 1.0 and early_stop is None):
+                    print("Ran out of patient, early stop...")
+                    break
+
+    def test(self):
+        directory = args['path'].split("/")
+        test_HDD = directory[2].split('HDD')[1].split('BSZ')[0]
+        test_decoder = directory[1].split('-')[0]
+        test_BSZ = int(args['batch']) if args['batch'] else int(directory[2].split('BSZ')[1].split('DR')[0])
+        args["decoder"] = test_decoder
+        args["HDD"] = test_HDD
+        print("HDD", test_HDD, "decoder", test_decoder, "BSZ", test_BSZ)
+
+        train, dev, test, test_special, lang, SLOTS_LIST, gating_dict, max_word = prepare_data_seq(False, args['task'],
+                                                                                                   False,
+                                                                                                   batch_size=test_BSZ)
+
+        model = test_decoder(
+            int(test_HDD),
+            lang=lang,
+            path=args['path'],
+            task=args["task"],
+            lr=0,
+            dropout=0,
             slots=SLOTS_LIST,
             gating_dict=gating_dict,
             nb_train_vocab=max_word)
 
-        # print("[Info] Slots include ", SLOTS_LIST)
-        # print("[Info] Unpointable Slots include ", gating_dict)
+        if args["run_dev_testing"]:
+            print("Development Set ...")
+            acc_dev = model.evaluate(dev, 1e7, SLOTS_LIST[2])
 
-        for epoch in range(200):
-            print("Epoch:{}".format(epoch))
-            # Run the train function
-            pbar = tqdm(enumerate(train), total=len(train))
-            for i, data in pbar:
-                model.train_batch(data, int(args['clip']), SLOTS_LIST[1], reset=(i == 0))
-                model.optimize(args['clip'])
-                pbar.set_description(model.print_loss())
-                # print(data)
-                # exit(1)
-        pass
+        if args['except_domain'] != "" and args["run_except_4d"]:
+            print("Test Set on 4 domains...")
+            acc_test_4d = model.evaluate(test_special, 1e7, SLOTS_LIST[2])
 
-    def test(self):
-        '''Testing funciton of TRADE (to be added)'''
-        pass
+        print("Test Set ...")
+        acc_test = model.evaluate(test, 1e7, SLOTS_LIST[3])
 
     def construct_query(self, context):
         '''Construct query from context'''

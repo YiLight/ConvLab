@@ -12,6 +12,7 @@ from collections import OrderedDict
 from random import shuffle
 import pickle
 from embeddings import GloveEmbedding, KazumaCharEmbedding
+import os
 
 # import matplotlib.pyplot as plt
 # import seaborn  as sns
@@ -56,8 +57,7 @@ class TRADE(nn.Module):
         self.cross_entorpy = nn.CrossEntropyLoss()
         self.data_dir = path
 
-        self.encoder = EncoderRNN(
-            self.lang.n_words, hidden_size, self.dropout, data_dir=path)
+        self.encoder = EncoderRNN(self.lang.n_words, hidden_size, self.dropout, data_dir=path)
         self.decoder = Generator(self.lang, self.encoder.embedding, self.lang.n_words, hidden_size, self.dropout,
                                  self.slots, self.nb_gate)
 
@@ -94,7 +94,7 @@ class TRADE(nn.Module):
         return 'L:{:.2f},LP:{:.2f},LG:{:.2f}'.format(print_loss_avg, print_loss_ptr, print_loss_gate)
 
     def save_model(self, dec_type):
-        directory = 'save/TRADE-' + args["addName"] + args['dataset'] + str(self.task) + '/' + 'HDD' + str(
+        directory = 'output/TRADE-' + args["addName"] + args['dataset'] + str(self.task) + '/' + 'HDD' + str(
             self.hidden_size) + 'BSZ' + str(args['batch']) + 'DR' + str(self.dropout) + str(dec_type)
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -104,7 +104,7 @@ class TRADE(nn.Module):
     def reset(self):
         self.loss, self.print_every, self.loss_ptr, self.loss_gate, self.loss_class = 0, 1, 0, 0, 0
 
-    def train_batch(self, data, clip, slot_temp, reset=0):
+    def train_batch(self, training_data, clip, slot_temp, reset=0):
         if reset:
             self.reset()
         # Zero gradients of both optimizers
@@ -112,16 +112,16 @@ class TRADE(nn.Module):
 
         # Encode and Decode
         use_teacher_forcing = random.random() < args["teacher_forcing_ratio"]
-        all_point_outputs, gates, words_point_out, words_class_out = self.encode_and_decode(data, use_teacher_forcing,
+        all_point_outputs, gates, words_point_out, words_class_out = self.encode_and_decode(training_data, use_teacher_forcing,
                                                                                             slot_temp)
 
         loss_ptr = masked_cross_entropy_for_value(
             all_point_outputs.transpose(0, 1).contiguous(),
             # [:,:len(self.point_slots)].contiguous(),
-            data["generate_y"].contiguous(),
-            data["y_lengths"])  # [:,:len(self.point_slots)])
+            training_data["generate_y"].contiguous(),
+            training_data["y_lengths"])  # [:,:len(self.point_slots)])
         loss_gate = self.cross_entorpy(gates.transpose(0, 1).contiguous().view(-1, gates.size(-1)),
-                                       data["gating_label"].contiguous().view(-1))
+                                       training_data["gating_label"].contiguous().view(-1))
 
         if args["use_gate"]:
             loss = loss_ptr + loss_gate
