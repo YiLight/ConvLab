@@ -53,7 +53,6 @@ class MILU(NLU):
         self.model = archive.model
         self.model.eval()
 
-
     def parse(self, utterance, context=[]):
         """
         Predict the dialog act of a natural language utterance and apply error model.
@@ -77,7 +76,8 @@ class MILU(NLU):
 
 
 if __name__ == "__main__":
-    nlu = MILU(model_file="https://convlab.blob.core.windows.net/models/milu.tar.gz")
+    # nlu = MILU(model_file="https://convlab.blob.core.windows.net/models/milu.tar.gz")
+    nlu = MILU(model_file='/home/lym/PycharmProjects/ConvLab/convlab/modules/nlu/multiwoz/milu/models/milu.tar.gz')
     test_contexts = [
         "SENT_END",
         "SENT_END",

@@ -129,7 +129,6 @@ class RuleBasedMultiwozBot(SysPolicy):
                 for user_act in user_acts:
                     del DA[user_act]
 
-        # print("Sys action: ", DA)
 
         if DA == {}:
             return {'general-greet': [['none', 'none']]}
