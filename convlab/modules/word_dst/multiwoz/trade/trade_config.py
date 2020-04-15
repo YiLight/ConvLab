@@ -63,6 +63,11 @@ parser.add_argument('-exceptd','--except_domain', help='', required=False, defau
 parser.add_argument('-onlyd','--only_domain', help='', required=False, default="", type=str)
 
 
+parser.add_argument('-spec', '--spec', help='spec file', required=True)
+parser.add_argument('-name', '--name', help='spec name', required=True)
+parser.add_argument('-mode', '--mode', help='running mode', required=True)
+
+
 args = vars(parser.parse_args())
 if args["load_embedding"]:
     args["hidden"] = 400

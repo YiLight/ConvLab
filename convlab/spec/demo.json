@@ -59,7 +59,7 @@
       "name": "DialogAgent",
       "nlu": {
         "name": "MILU",
-        "model_file": "https://convlab.blob.core.windows.net/models/milu.tar.gz"
+        "model_file": "/home/lym/PycharmProjects/ConvLab/convlab/modules/nlu/multiwoz/milu/models/milu.tar.gz"
       },
       "dst": {
         "name": "RuleDST"
@@ -87,7 +87,7 @@
       },
       "nlu": {
         "name": "MILU",
-        "model_file": "https://convlab.blob.core.windows.net/models/milu.tar.gz"
+        "model_file": "/home/lym/PycharmProjects/ConvLab/convlab/modules/nlu/multiwoz/milu/models/milu.tar.gz"
       },
       "nlg": {
         "name": "MultiwozTemplateNLG",
@@ -354,7 +354,7 @@
       },
       "nlu": {
         "name": "MILU",
-        "model_file": "https://convlab.blob.core.windows.net/models/milu.tar.gz"
+        "model_file": "/home/lym/PycharmProjects/ConvLab/convlab/modules/nlu/multiwoz/milu/models/milu.tar.gz"
       },
       "nlg": {
         "name": "MultiwozTemplateNLG",

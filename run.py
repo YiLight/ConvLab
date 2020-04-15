@@ -21,6 +21,7 @@ from convlab import EVAL_MODES, TRAIN_MODES, INTERACT_MODES
 from convlab.experiment.control import Session, Trial, Experiment
 from convlab.lib import logger, util
 from convlab.spec import spec_util
+from convlab.modules.word_dst.multiwoz.trade.trade_config import args
 
 debug_modules = [
     # 'algorithm',
@@ -84,15 +85,18 @@ def read_spec_and_run(spec_file, spec_name, lab_mode):
 
 def main():
     '''Main method to run jobs from scheduler or from a spec directly'''
-    args = sys.argv[1:]
-    if len(args) <= 1:  # use scheduler
-        job_file = args[0] if len(args) == 1 else 'job/experiments.json'
+    # arg = sys.argv[1:]
+    arg = [args['spec'], args['name'], args['mode']]
+    if len(arg) <= 1:  # use scheduler
+        job_file = arg[0] if len(arg) == 1 else 'job/experiments.json'
         for spec_file, spec_and_mode in util.read(job_file).items():
             for spec_name, lab_mode in spec_and_mode.items():
                 read_spec_and_run(spec_file, spec_name, lab_mode)
     else:  # run single spec
-        assert len(args) == 3, f'To use sys args, specify spec_file, spec_name, lab_mode'
-        read_spec_and_run(*args)
+        assert len(arg) == 3, f'To use sys args, specify spec_file, spec_name, lab_mode'
+        read_spec_and_run(*arg)
+        # print(args['spec'])
+        # read_spec_and_run(args['spec'], args['name'], args['mode'])
 
 
 if __name__ == '__main__':

@@ -62,7 +62,7 @@ def get_available_devs():
     return [x.name for x in local_device_protos if x.device_type == 'GPU']
 
 
-class GRU(tf.nn.rnn_cell.RNNCell):
+class GRU(tf.compat.v1.nn.rnn_cell.RNNCell):
     '''
     Create a Gated Recurrent unit to unroll the network through time
     for combining the current and previous belief states
